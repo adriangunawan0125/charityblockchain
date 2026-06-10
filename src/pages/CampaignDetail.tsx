@@ -49,8 +49,14 @@ const CampaignDetail = () => {
     setDonations((ds ?? []).map(d => ({ ...d, amount: Number(d.amount) })) as Donation[]);
     const { data: rs } = await supabase.from("reports").select("*").eq("campaign_id", id).order("created_at", { ascending: false });
     setReports(rs ?? []);
-    const { data: cms } = await supabase.from("campaign_comments").select("*, profile:profiles(display_name, avatar_url)").eq("campaign_id", id).order("created_at", { ascending: false });
-    setComments((cms ?? []) as any);
+    const { data: cms } = await supabase.from("campaign_comments").select("*").eq("campaign_id", id).order("created_at", { ascending: false });
+    const userIds = Array.from(new Set((cms ?? []).map((c) => c.user_id)));
+    let profMap: Record<string, { display_name: string | null; avatar_url: string | null }> = {};
+    if (userIds.length) {
+      const { data: profs } = await supabase.from("profiles").select("id, display_name, avatar_url").in("id", userIds);
+      profMap = Object.fromEntries((profs ?? []).map((p) => [p.id, { display_name: p.display_name, avatar_url: p.avatar_url }]));
+    }
+    setComments((cms ?? []).map((c) => ({ ...c, profile: profMap[c.user_id] })) as Comment[]);
     const { data: ups } = await supabase.from("campaign_updates").select("*").eq("campaign_id", id).order("created_at", { ascending: false });
     setUpdates(ups ?? []);
   };
