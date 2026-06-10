@@ -1,14 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/charity/Navbar";
 import { CampaignCard, type Campaign } from "@/components/charity/CampaignCard";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Shield, Eye, Link2, Zap } from "lucide-react";
+import { Shield, Eye, Link2, Zap, Search, TrendingUp, Users, Wallet } from "lucide-react";
+import { CATEGORIES } from "@/lib/categories";
 
 const Index = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<string>("all");
+  const [sort, setSort] = useState<"newest" | "raised" | "progress">("newest");
 
   useEffect(() => {
     document.title = "TrustChain — Donasi Transparan di Blockchain";
@@ -31,6 +37,22 @@ const Index = () => {
     }
     setLoading(false);
   };
+
+  const filtered = useMemo(() => {
+    let list = campaigns.filter((c) =>
+      (category === "all" || (c as any).category === category) &&
+      (query === "" || c.title.toLowerCase().includes(query.toLowerCase()) || c.description.toLowerCase().includes(query.toLowerCase()))
+    );
+    if (sort === "raised") list = [...list].sort((a, b) => (b.raised ?? 0) - (a.raised ?? 0));
+    else if (sort === "progress") list = [...list].sort((a, b) => ((b.raised ?? 0) / Number(b.target_amount)) - ((a.raised ?? 0) / Number(a.target_amount)));
+    return list;
+  }, [campaigns, query, category, sort]);
+
+  const totals = useMemo(() => {
+    const total = campaigns.reduce((a, c) => a + (c.raised ?? 0), 0);
+    const donors = campaigns.reduce((a, c) => a + (c.donor_count ?? 0), 0);
+    return { total, donors, count: campaigns.length };
+  }, [campaigns]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -56,8 +78,24 @@ const Index = () => {
                 <a href="#campaigns">Lihat Campaign</a>
               </Button>
               <Button asChild size="lg" variant="outline" className="text-base">
-                <Link to="/auth">Sebagai Admin</Link>
+                <Link to="/stats">Lihat Statistik</Link>
               </Button>
+            </div>
+
+            {/* Live stats counters */}
+            <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto pt-8">
+              <div className="p-4 rounded-xl border border-border bg-card/50 backdrop-blur">
+                <div className="text-2xl md:text-3xl font-bold font-mono text-gradient">{totals.total.toFixed(2)}</div>
+                <div className="text-[10px] md:text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1"><Wallet className="h-3 w-3" /> MATIC terkumpul</div>
+              </div>
+              <div className="p-4 rounded-xl border border-border bg-card/50 backdrop-blur">
+                <div className="text-2xl md:text-3xl font-bold font-mono text-gradient">{totals.donors}</div>
+                <div className="text-[10px] md:text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1"><Users className="h-3 w-3" /> donasi</div>
+              </div>
+              <div className="p-4 rounded-xl border border-border bg-card/50 backdrop-blur">
+                <div className="text-2xl md:text-3xl font-bold font-mono text-gradient">{totals.count}</div>
+                <div className="text-[10px] md:text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1"><TrendingUp className="h-3 w-3" /> campaign aktif</div>
+              </div>
             </div>
           </div>
 
@@ -81,10 +119,33 @@ const Index = () => {
 
       {/* Campaigns */}
       <section id="campaigns" className="container py-20">
-        <div className="flex items-end justify-between mb-10">
+        <div className="mb-8 space-y-6">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Campaign Aktif</h2>
             <p className="text-muted-foreground mt-2">Pilih campaign yang ingin Anda dukung.</p>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Cari campaign…" className="pl-9" />
+            </div>
+            <div className="flex gap-2">
+              {(["newest", "raised", "progress"] as const).map((s) => (
+                <Button key={s} size="sm" variant={sort === s ? "default" : "outline"} onClick={() => setSort(s)}>
+                  {s === "newest" ? "Terbaru" : s === "raised" ? "Terkumpul" : "Progress"}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Badge variant={category === "all" ? "default" : "outline"} className="cursor-pointer px-3 py-1" onClick={() => setCategory("all")}>Semua</Badge>
+            {CATEGORIES.map((c) => (
+              <Badge key={c.value} variant={category === c.value ? "default" : "outline"} className="cursor-pointer px-3 py-1" onClick={() => setCategory(c.value)}>
+                {c.emoji} {c.label}
+              </Badge>
+            ))}
           </div>
         </div>
 
@@ -92,14 +153,14 @@ const Index = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1,2,3].map(i => <div key={i} className="h-96 rounded-2xl bg-muted animate-pulse" />)}
           </div>
-        ) : campaigns.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="text-center py-20 border border-dashed rounded-2xl">
             <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">Belum ada campaign. Login sebagai admin untuk membuat.</p>
+            <p className="text-muted-foreground">{campaigns.length === 0 ? "Belum ada campaign. Login sebagai admin untuk membuat." : "Tidak ada campaign cocok."}</p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {campaigns.map((c) => <CampaignCard key={c.id} c={c} />)}
+            {filtered.map((c) => <CampaignCard key={c.id} c={c} />)}
           </div>
         )}
       </section>
