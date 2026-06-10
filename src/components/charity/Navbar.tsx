@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
 import { shortAddress } from "@/lib/chain";
-import { Wallet, Shield, LogOut, ShieldCheck } from "lucide-react";
+import { Wallet, Shield, LogOut, ShieldCheck, User, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -32,6 +32,14 @@ export const Navbar = () => {
 
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
           <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">Campaigns</Link>
+          <Link to="/stats" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+            <BarChart3 className="h-4 w-4" /> Statistik
+          </Link>
+          {user && (
+            <Link to="/profile" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+              <User className="h-4 w-4" /> Profil
+            </Link>
+          )}
           {isAdmin && (
             <Link to="/admin" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
               <Shield className="h-4 w-4" /> Admin
