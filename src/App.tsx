@@ -8,6 +8,8 @@ import NotFound from "./pages/NotFound.tsx";
 import CampaignDetail from "./pages/CampaignDetail.tsx";
 import Auth from "./pages/Auth.tsx";
 import Admin from "./pages/Admin.tsx";
+import Profile from "./pages/Profile.tsx";
+import Stats from "./pages/Stats.tsx";
 import { WalletProvider } from "@/hooks/useWallet";
 import { AuthProvider } from "@/hooks/useAuth";
 
@@ -26,6 +28,8 @@ const App = () => (
               <Route path="/campaign/:id" element={<CampaignDetail />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/stats" element={<Stats />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
