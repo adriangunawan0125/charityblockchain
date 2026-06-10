@@ -27,15 +27,16 @@ const Stats = () => {
   const verifiedPct = donations.length ? (verified / donations.length) * 100 : 0;
 
   // Leaderboard
-  const board = Object.values(
-    donations.reduce((acc: Record<string, { addr: string; total: number; count: number }>, d) => {
+  type Row = { addr: string; total: number; count: number };
+  const board: Row[] = (Object.values(
+    donations.reduce((acc: Record<string, Row>, d) => {
       const k = d.donor_address.toLowerCase();
       acc[k] = acc[k] ?? { addr: k, total: 0, count: 0 };
       acc[k].total += Number(d.amount);
       acc[k].count += 1;
       return acc;
     }, {})
-  ).sort((a, b) => b.total - a.total).slice(0, 10);
+  ) as Row[]).sort((a, b) => b.total - a.total).slice(0, 10);
 
   // Daily series (last 14 days)
   const days: { date: string; total: number }[] = [];
