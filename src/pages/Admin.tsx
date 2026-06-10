@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { Plus, ExternalLink, Wallet, FileUp, Trash2, ShieldAlert } from "lucide-react";
 import { EXPLORER_ADDRESS, shortAddress } from "@/lib/chain";
 import { z } from "zod";
+import { CATEGORIES, getCategory } from "@/lib/categories";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const campaignSchema = z.object({
   title: z.string().trim().min(3, "Judul minimum 3 karakter").max(120),
@@ -22,6 +24,7 @@ const campaignSchema = z.object({
   image_url: z.string().url("URL gambar tidak valid").max(500).optional().or(z.literal("")),
   target_amount: z.number().positive("Target harus > 0").max(1000000),
   wallet_address: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Address Ethereum tidak valid"),
+  category: z.string().min(1),
 });
 
 const Admin = () => {
@@ -37,6 +40,7 @@ const Admin = () => {
   const [img, setImg] = useState("");
   const [target, setTarget] = useState("1");
   const [wallet, setWallet] = useState("");
+  const [category, setCategory] = useState<string>("umum");
 
   useEffect(() => { document.title = "Admin — TrustChain"; load(); }, []);
   useEffect(() => { if (address && !wallet) setWallet(address); }, [address, wallet]);
@@ -65,7 +69,7 @@ const Admin = () => {
 
   const create = async () => {
     const parsed = campaignSchema.safeParse({
-      title, description: desc, image_url: img, target_amount: Number(target), wallet_address: wallet,
+      title, description: desc, image_url: img, target_amount: Number(target), wallet_address: wallet, category,
     });
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
     const { error } = await supabase.from("campaigns").insert({
@@ -74,11 +78,12 @@ const Admin = () => {
       image_url: parsed.data.image_url || null,
       target_amount: parsed.data.target_amount,
       wallet_address: parsed.data.wallet_address.toLowerCase(),
+      category: parsed.data.category,
       created_by: user.id,
     });
     if (error) { toast.error(error.message); return; }
     toast.success("Campaign dibuat!");
-    setOpen(false); setTitle(""); setDesc(""); setImg(""); setTarget("1");
+    setOpen(false); setTitle(""); setDesc(""); setImg(""); setTarget("1"); setCategory("umum");
     load();
   };
 
@@ -107,6 +112,15 @@ const Admin = () => {
                 <div className="space-y-2"><Label>Judul</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
                 <div className="space-y-2"><Label>Deskripsi</Label><Textarea rows={4} value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
                 <div className="space-y-2"><Label>URL Gambar (opsional)</Label><Input value={img} onChange={(e) => setImg(e.target.value)} placeholder="https://…" /></div>
+                <div className="space-y-2">
+                  <Label>Kategori</Label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.emoji} {c.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2"><Label>Target (MATIC)</Label><Input type="number" step="0.01" value={target} onChange={(e) => setTarget(e.target.value)} /></div>
                   <div className="space-y-2">
@@ -137,7 +151,10 @@ const Admin = () => {
                   {c.image_url ? <img src={c.image_url} className="h-full w-full object-cover" alt="" /> : <div className="h-full w-full gradient-hero" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold truncate">{c.title}</div>
+                  <div className="font-semibold truncate flex items-center gap-2">
+                    {c.title}
+                    <span className="text-xs font-normal text-muted-foreground">{getCategory(c.category ?? "umum").emoji}</span>
+                  </div>
                   <div className="text-sm text-muted-foreground">
                     <span className="font-mono">{c.raised.toFixed(4)} / {Number(c.target_amount).toFixed(2)} MATIC</span> · {c.donor_count} donatur
                   </div>

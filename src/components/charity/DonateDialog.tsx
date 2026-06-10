@@ -44,18 +44,29 @@ export const DonateDialog = ({ open, onOpenChange, campaignId, recipientAddress,
     try {
       const hash = await sendDonation(recipientAddress, parsed.data.amount.toString());
       setTxHash(hash);
-      const { error } = await supabase.from("donations").insert({
+      const { data: inserted, error } = await supabase.from("donations").insert({
         campaign_id: campaignId,
         donor_address: address.toLowerCase(),
         amount: parsed.data.amount,
         tx_hash: hash,
         block_explorer_url: EXPLORER_TX(hash),
         message: parsed.data.message ?? null,
-      });
+        donor_user_id: (await supabase.auth.getUser()).data.user?.id ?? null,
+      }).select("id").maybeSingle();
       if (error) console.error(error);
       setStep("success");
       toast.success("Donasi berhasil dikirim!", { description: "Tercatat di blockchain Polygon Amoy." });
       onSuccess();
+
+      // Fire-and-forget on-chain verification (~12s confirm)
+      if (inserted?.id) {
+        setTimeout(() => {
+          supabase.functions.invoke("verify-donation", { body: { donation_id: inserted.id } })
+            .then(({ data }) => {
+              if (data?.verified) toast.success("✓ Donasi terverifikasi on-chain");
+            }).catch(() => {});
+        }, 15000);
+      }
     } catch (e: any) {
       console.error(e);
       toast.error("Transaksi gagal", { description: e?.shortMessage || e?.message || "Unknown error" });

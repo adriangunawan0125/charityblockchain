@@ -3,6 +3,8 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Users, Target, ArrowRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { getCategory } from "@/lib/categories";
 
 export type Campaign = {
   id: string;
@@ -10,6 +12,7 @@ export type Campaign = {
   description: string;
   image_url: string | null;
   target_amount: number;
+  category?: string;
   raised?: number;
   donor_count?: number;
 };
@@ -17,6 +20,7 @@ export type Campaign = {
 export const CampaignCard = ({ c }: { c: Campaign }) => {
   const raised = c.raised ?? 0;
   const pct = Math.min(100, (raised / Number(c.target_amount)) * 100);
+  const cat = getCategory(c.category ?? "umum");
   return (
     <Card className="group overflow-hidden border-border/60 shadow-card hover:shadow-elegant transition-all duration-500 hover:-translate-y-1 bg-card">
       <div className="relative h-48 overflow-hidden bg-muted">
@@ -26,6 +30,9 @@ export const CampaignCard = ({ c }: { c: Campaign }) => {
           <div className="h-full w-full gradient-hero" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+        <Badge className="absolute top-3 left-3 bg-background/90 text-foreground backdrop-blur border-0 shadow-card">
+          {cat.emoji} {cat.label}
+        </Badge>
       </div>
       <CardContent className="p-6 space-y-3">
         <h3 className="font-bold text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">{c.title}</h3>

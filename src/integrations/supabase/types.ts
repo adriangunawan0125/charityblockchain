@@ -14,8 +14,76 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaign_comments: {
+        Row: {
+          campaign_id: string
+          content: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          content: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_comments_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_updates: {
+        Row: {
+          campaign_id: string
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          title: string
+        }
+        Insert: {
+          campaign_id: string
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          title: string
+        }
+        Update: {
+          campaign_id?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_updates_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
+          category: string
           created_at: string
           created_by: string | null
           description: string
@@ -28,6 +96,7 @@ export type Database = {
           wallet_address: string
         }
         Insert: {
+          category?: string
           created_at?: string
           created_by?: string | null
           description: string
@@ -40,6 +109,7 @@ export type Database = {
           wallet_address: string
         }
         Update: {
+          category?: string
           created_at?: string
           created_by?: string | null
           description?: string
@@ -64,6 +134,8 @@ export type Database = {
           id: string
           message: string | null
           tx_hash: string
+          verified: boolean
+          verified_at: string | null
         }
         Insert: {
           amount: number
@@ -75,6 +147,8 @@ export type Database = {
           id?: string
           message?: string | null
           tx_hash: string
+          verified?: boolean
+          verified_at?: string | null
         }
         Update: {
           amount?: number
@@ -86,6 +160,8 @@ export type Database = {
           id?: string
           message?: string | null
           tx_hash?: string
+          verified?: boolean
+          verified_at?: string | null
         }
         Relationships: [
           {
@@ -99,6 +175,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           created_at: string
           display_name: string | null
           id: string
@@ -106,6 +184,8 @@ export type Database = {
           wallet_address: string | null
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
           id: string
@@ -113,6 +193,8 @@ export type Database = {
           wallet_address?: string | null
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
