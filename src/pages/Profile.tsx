@@ -31,10 +31,16 @@ const Profile = () => {
       if (p) { setProfile(p); setDisplayName(p.display_name ?? ""); setBio(p.bio ?? ""); setAvatar(p.avatar_url ?? ""); }
       const { data: d } = await supabase
         .from("donations")
-        .select("*, campaigns(title, id)")
+        .select("*")
         .eq("donor_user_id", user.id)
         .order("created_at", { ascending: false });
-      setDonations(d ?? []);
+      const cids = Array.from(new Set((d ?? []).map((x) => x.campaign_id)));
+      let cmap: Record<string, { id: string; title: string }> = {};
+      if (cids.length) {
+        const { data: cs } = await supabase.from("campaigns").select("id, title").in("id", cids);
+        cmap = Object.fromEntries((cs ?? []).map((c) => [c.id, c]));
+      }
+      setDonations((d ?? []).map((x) => ({ ...x, campaigns: cmap[x.campaign_id] })));
     })();
   }, [user]);
 
