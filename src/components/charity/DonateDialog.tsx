@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useWallet } from "@/hooks/useWallet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Wallet, ExternalLink } from "lucide-react";
+import { Loader2, Wallet, ExternalLink, Info } from "lucide-react";
 import { EXPLORER_TX } from "@/lib/chain";
 import { z } from "zod";
 
@@ -27,6 +29,7 @@ type Props = {
 
 export const DonateDialog = ({ open, onOpenChange, campaignId, recipientAddress, campaignTitle, onSuccess }: Props) => {
   const { address, connect, sendDonation } = useWallet();
+  const { user } = useAuth();
   const [amount, setAmount] = useState("0.01");
   const [message, setMessage] = useState("");
   const [step, setStep] = useState<"form" | "pending" | "success">("form");
@@ -97,6 +100,14 @@ export const DonateDialog = ({ open, onOpenChange, campaignId, recipientAddress,
                 <Label>Pesan (opsional)</Label>
                 <Textarea maxLength={280} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Semoga bermanfaat…" />
               </div>
+              {!user && (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20 text-xs">
+                  <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <p className="text-muted-foreground">
+                    Belum login? <Link to="/auth" className="text-primary font-medium hover:underline">Daftar / Login</Link> dulu agar donasi tercatat di riwayat akun Anda dan bisa dilihat kapan saja.
+                  </p>
+                </div>
+              )}
               <Button onClick={handleDonate} className="w-full gradient-hero shadow-elegant border-0" size="lg">
                 <Wallet className="h-4 w-4 mr-2" />
                 {address ? "Donasi Sekarang" : "Hubungkan Wallet"}
