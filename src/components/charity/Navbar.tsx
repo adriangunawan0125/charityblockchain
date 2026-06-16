@@ -65,7 +65,7 @@ export const Navbar = () => {
               <LogOut className="h-4 w-4" />
             </Button>
           ) : (
-            <Button variant="ghost" onClick={() => nav("/auth")}>Admin Login</Button>
+            <Button variant="ghost" onClick={() => nav("/auth")}>Login / Daftar</Button>
           )}
         </div>
       </div>
