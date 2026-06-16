@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Heart, History, Wallet } from "lucide-react";
 import { z } from "zod";
 
 const schema = z.object({
@@ -25,7 +25,7 @@ const Auth = () => {
 
   useEffect(() => { document.title = "Login — TrustChain"; }, []);
 
-  if (!loading && user) return <Navigate to="/admin" replace />;
+  if (!loading && user) return <Navigate to="/profile" replace />;
 
   const handle = async (mode: "signin" | "signup") => {
     const p = schema.safeParse({ email, password });
@@ -34,14 +34,14 @@ const Auth = () => {
     if (mode === "signup") {
       const { error } = await supabase.auth.signUp({
         email, password,
-        options: { emailRedirectTo: window.location.origin + "/admin" },
+        options: { emailRedirectTo: window.location.origin + "/profile" },
       });
       if (error) toast.error(error.message);
-      else { toast.success("Akun dibuat!", { description: "Cek email untuk verifikasi atau langsung login." }); }
+      else { toast.success("Akun dibuat!", { description: "Selamat datang di TrustChain — riwayat donasi Anda akan tercatat otomatis." }); nav("/profile"); }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error(error.message);
-      else { toast.success("Login berhasil"); nav("/admin"); }
+      else { toast.success("Login berhasil"); nav("/profile"); }
     }
     setBusy(false);
   };
@@ -50,12 +50,26 @@ const Auth = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 gradient-glow pointer-events-none" />
       <Card className="w-full max-w-md p-8 shadow-elegant border-border/60 relative">
-        <div className="flex flex-col items-center mb-6">
+        <div className="flex flex-col items-center mb-6 text-center">
           <div className="h-12 w-12 rounded-2xl gradient-hero flex items-center justify-center shadow-glow mb-3">
             <ShieldCheck className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold">Admin TrustChain</h1>
-          <p className="text-sm text-muted-foreground mt-1">Kelola campaign donasi</p>
+          <h1 className="text-2xl font-bold">Masuk ke TrustChain</h1>
+          <p className="text-sm text-muted-foreground mt-1">Pantau seluruh riwayat donasi Anda di satu tempat</p>
+        </div>
+        <div className="grid grid-cols-3 gap-2 mb-6 text-center">
+          <div className="p-2 rounded-lg bg-muted/40">
+            <History className="h-4 w-4 mx-auto mb-1 text-primary" />
+            <p className="text-[10px] text-muted-foreground leading-tight">Riwayat donasi</p>
+          </div>
+          <div className="p-2 rounded-lg bg-muted/40">
+            <Heart className="h-4 w-4 mx-auto mb-1 text-primary" />
+            <p className="text-[10px] text-muted-foreground leading-tight">Campaign favorit</p>
+          </div>
+          <div className="p-2 rounded-lg bg-muted/40">
+            <Wallet className="h-4 w-4 mx-auto mb-1 text-primary" />
+            <p className="text-[10px] text-muted-foreground leading-tight">Multi wallet</p>
+          </div>
         </div>
         <Tabs defaultValue="signin">
           <TabsList className="grid grid-cols-2 w-full">
@@ -79,7 +93,7 @@ const Auth = () => {
           ))}
         </Tabs>
         <p className="text-xs text-muted-foreground mt-6 text-center">
-          Untuk role admin: daftar, lalu set role lewat Lovable Cloud.
+          Gratis & aman. Donasi tetap dikirim langsung dari wallet Anda ke wallet campaign di blockchain.
         </p>
       </Card>
     </div>
